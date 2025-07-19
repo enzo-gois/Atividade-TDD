@@ -1,7 +1,6 @@
 import express from "express"
-import database from "./src/config/database.js";
 
-const app = express();
+export const app = express();
 
 const PORT = 3000;
 
