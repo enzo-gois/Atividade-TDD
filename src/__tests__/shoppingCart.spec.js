@@ -10,4 +10,29 @@ describe("Carrinho de compras", () => {
     const res = await request(app).post("/shopping-cart").send(products);
     expect(res.statusCode).toEqual(204);
   });
+
+  it("Deve aplicar um cupom de desconto válido e recalcular o total", async () => {
+    await request(app)
+      .post("/shopping-cart")
+      .send({ productId: "produto-caro", price: 100, quantity: 1 });
+
+    const res = await request(app)
+      .post("/shopping-cart/apply-coupon")
+      .send({ couponCode: "DESCONTO10" });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.total).toEqual(90);
+  });
+
+  it("Deve atualizar a quantidade de um produto que já está no carrinho", async () => {
+    const productId = "prod-xyz";
+    await request(app).post("/shopping-cart").send({ productId, quantity: 1 });
+
+    const res = await request(app)
+      .put(`/shopping-cart/${productId}`)
+      .send({ quantity: 5 });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.items[0].quantity).toBe(5);
+  });
 });
