@@ -5,25 +5,9 @@ const coupons = {
   DESCONTO10: 0.1,
 };
 
-export function applyCoupon(couponCode) {
-  if (coupons[couponCode]) {
-    appliedCoupon = coupons[couponCode];
-  }
-  return calculateTotal();
-}
-
-export function addProductToCart(product) {
-  const existing = cart.find((p) => p.id === product.id);
-  if (existing) {
-    existing.quantity += product.quantity ?? 1;
-  } else {
-    cart.push({
-      id: product.id,
-      name: product.name || "Produto",
-      price: product.price ?? 0,
-      quantity: product.quantity ?? 1,
-    });
-  }
+export function clearCartMemory() {
+  cart = [];
+  appliedCoupon = null;
 }
 
 export function getCart() {
@@ -33,20 +17,37 @@ export function getCart() {
   };
 }
 
-export function clearCartMemory() {
-  cart = [];
-  appliedCoupon = null;
-}
-
-export function updateProductQuantity(id, qtd) {
-  const product = cart.find((p) => p.id === id);
-  if (product) {
-    product.quantity = qtd;
+export function addProductToCart(product) {
+  const existing = cart.find(p => p.id === product.id);
+  if (existing) {
+    existing.quantity += product.quantity ?? 1;
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name ?? "Produto",
+      price: product.price ?? 0,
+      quantity: product.quantity ?? 1,
+    });
   }
 }
 
+export function updateProductQuantity(id, quantity) {
+  const product = cart.find(p => p.id === id);
+  if (!product) return false;
+  product.quantity = quantity;
+  return true;
+}
+
 export function removeProduct(id) {
-  cart = cart.filter((p) => p.id !== id);
+  const initialLength = cart.length;
+  cart = cart.filter(p => p.id !== id);
+  return cart.length < initialLength;
+}
+
+export function applyCoupon(code) {
+  if (!coupons[code]) return false;
+  appliedCoupon = coupons[code];
+  return true;
 }
 
 function calculateTotal() {
@@ -54,8 +55,5 @@ function calculateTotal() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  if (appliedCoupon) {
-    return Math.round(subtotal * (1 - appliedCoupon));
-  }
-  return subtotal;
+  return appliedCoupon ? Math.round(subtotal * (1 - appliedCoupon)) : subtotal;
 }

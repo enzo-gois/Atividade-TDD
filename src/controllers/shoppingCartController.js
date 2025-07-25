@@ -8,48 +8,86 @@ import {
 } from "../models/shoppingCartModel.js";
 
 export function addToCart(req, res) {
-  const body = req.body;
-  if (Array.isArray(body)) {
-    body.forEach((product) => addProductToCart(product));
-  } else {
-    addProductToCart(body);
+  try {
+    const products = Array.isArray(req.body) ? req.body : [req.body];
+
+    if (!products.every(p => p.id && p.price != null)) {
+      return res.status(400).json({ message: "Produto inválido. 'id' e 'price' são obrigatórios." });
+    }
+
+    products.forEach(addProductToCart);
+    return res.sendStatus(204);
+  } catch {
+    return res.status(500).json({ message: "Erro ao adicionar produto ao carrinho." });
   }
-
-  return res.status(204).send();
 }
 
-export function getCartHandler(req, res) {
-  const cart = getCart();
-  return res.status(200).json({
-    items: cart.items,
-    total: cart.total,
-  });
+export function getCartHandler(_req, res) {
+  try {
+    return res.status(200).json(getCart());
+  } catch {
+    return res.status(500).json({ message: "Erro ao recuperar carrinho." });
+  }
 }
 
-export function clearCart(req, res) {
-  clearCartMemory();
-  return res.status(204).send();
+export function clearCart(_req, res) {
+  try {
+    clearCartMemory();
+    return res.sendStatus(204);
+  } catch {
+    return res.status(500).json({ message: "Erro ao limpar o carrinho." });
+  }
 }
 
 export function applyDiscountCoupon(req, res) {
-  const { couponCode } = req.body;
-  const newTotal = applyCoupon(couponCode);
-  const cart = getCart();
-  return res.status(200).json({ ...cart, total: newTotal });
+  try {
+    const { couponCode } = req.body;
+    if (!couponCode) {
+      return res.status(400).json({ message: "Código do cupom é obrigatório." });
+    }
+
+    const applied = applyCoupon(couponCode);
+    if (!applied) {
+      return res.status(400).json({ message: "Cupom inválido." });
+    }
+
+    return res.status(200).json(getCart());
+  } catch {
+    return res.status(500).json({ message: "Erro ao aplicar cupom." });
+  }
 }
 
 export function updateProduct(req, res) {
-  const { productId } = req.params;
-  const { quantity } = req.body;
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
 
-  updateProductQuantity(productId, quantity);
-  const cart = getCart();
-  res.status(200).json(cart);
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ message: "Quantidade inválida." });
+    }
+
+    const updated = updateProductQuantity(id, quantity);
+    if (!updated) {
+      return res.status(404).json({ message: "Produto não encontrado no carrinho." });
+    }
+
+    return res.status(200).json(getCart());
+  } catch {
+    return res.status(500).json({ message: "Erro ao atualizar quantidade." });
+  }
 }
 
 export function deleteProduct(req, res) {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  removeProduct(id);
-  res.status(204).send();
+    const removed = removeProduct(id);
+    if (!removed) {
+      return res.status(404).json({ message: "Produto não encontrado no carrinho." });
+    }
+
+    return res.sendStatus(204);
+  } catch {
+    return res.status(500).json({ message: "Erro ao remover produto." });
+  }
 }

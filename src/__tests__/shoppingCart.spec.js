@@ -59,15 +59,14 @@ describe("Carrinho de compras", () => {
 
   it("Deve remover um produto do carrinho com sucesso", async () => {
     const productId = "prod-to-delete";
-    await request(app).post("/shopping-cart").send({ productId, quantity: 1 });
+
+    await request(app).post("/shopping-cart").send({ id: productId, price: 100, quantity: 1 });
 
     const res = await request(app).delete(`/shopping-cart/${productId}`);
 
     expect(res.statusCode).toEqual(204);
 
     const carrinhoAtualizado = await request(app).get("/shopping-cart");
-    expect(
-      carrinhoAtualizado.body.items.find((item) => item.productId === productId)
-    ).toBeUndefined();
+    expect(carrinhoAtualizado.body.items.find(item => item.id === productId)).toBeUndefined();
   });
 });

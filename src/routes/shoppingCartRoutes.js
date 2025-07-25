@@ -14,7 +14,7 @@ router.post("/shopping-cart", addToCart);
 router.get("/shopping-cart", getCartHandler);
 router.delete("/shopping-cart", clearCart);
 router.post("/shopping-cart/apply-coupon", applyDiscountCoupon);
-router.put("/shopping-cart/:productId", updateProduct);
-router.delete("/shopping-cart/:productId", deleteProduct);
+router.put("/shopping-cart/:id", updateProduct); 
+router.delete("/shopping-cart/:id", deleteProduct); 
 
 export default router;
